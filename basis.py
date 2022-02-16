@@ -45,10 +45,16 @@ class PrimitiveGaussian:
         return self.prefactor * np.exp(-self.alpha * np.sum((value - self.coordinates)**2))
 
     def get_overlap_with(self, other):
+        """
+        multi dimensional
+        """
 
         return gaussian_product(self, other).integrate
 
     def get_kinetic_with(self, other):
+        """
+        3D
+        """
 
         g_s = gaussian_product(self, other)
         PG = g_s.coordinates - other.coordinates
@@ -56,6 +62,9 @@ class PrimitiveGaussian:
         return g_s.integrate * (3 * other.alpha - 2 * other.alpha ** 2 * (3/(2*g_s.alpha) + np.dot(PG, PG)))
 
     def get_potential_with(self, other, position, charge):
+        """
+        3D
+        """
 
         g_s = gaussian_product(self, other)
         PG = g_s.coordinates - position

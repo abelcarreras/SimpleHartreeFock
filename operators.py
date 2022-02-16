@@ -33,7 +33,7 @@ def electron_nuclear(electronic_structure, nuclear_coordinates, nuclear_charges)
 
 def electron_electron(electronic_structure):
     """
-    Calculate the electron-electron interaction matrix
+    Calculate the electron-electron interaction matrix (3D)
     """
     nbasis = len(electronic_structure)
 
