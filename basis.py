@@ -19,26 +19,26 @@ def gaussian_product(g_1, g_2):
     prefactor = g_1.prefactor * g_2.prefactor
     p = g_1.alpha * g_2.alpha
 
-    diff = np.linalg.norm(g_1.coordinates - g_2.coordinates) ** 2
+    PG = g_1.coordinates - g_2.coordinates
     coordinates = (g_1.coordinates * g_1.alpha + g_2.coordinates * g_2.alpha) / alpha
-    K = np.exp(-p/alpha * diff)
+    K = np.exp(-p/alpha * np.dot(PG, PG))
 
     return PrimitiveGaussian(alpha, K*prefactor, coordinates, normalize=False)
 
 
 class PrimitiveGaussian:
     def __init__(self, alpha, prefactor=1.0, coordinates=(0, 0, 0), normalize=True):
+        n_dim = len(coordinates)
         self.alpha = alpha
         self.prefactor = prefactor
         self.coordinates = np.array(coordinates)
-        # self.A = (2 * alpha/np.pi) ** 0.75  # + other terms for l1 l2 l3
 
         # normalize primitive such that <prim|prim> = 1
         if normalize:
             norm = prefactor * np.sqrt(np.pi/(2*self.alpha))**(len(coordinates))
             self.prefactor = prefactor / np.sqrt(norm)
 
-        self.integrate = self.prefactor * np.sqrt(np.pi / (self.alpha)) ** (len(coordinates))
+        self.integrate = self.prefactor * np.sqrt(np.pi / self.alpha) ** n_dim
 
     def __call__(self, value):
         value = np.array(value)

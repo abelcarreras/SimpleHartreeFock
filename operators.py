@@ -1,4 +1,3 @@
-import sys
 import numpy as np
 from basis import gaussian_product, boys
 
@@ -23,11 +22,13 @@ def electron_nuclear(electronic_structure, nuclear_coordinates, nuclear_charges)
     """
     Calculate the electron-nuclear interaction matrix
     """
-    V = 0
+    nbasis = len(electronic_structure)
+    V = np.zeros([nbasis, nbasis])
+
     for position, charge in zip(nuclear_coordinates, nuclear_charges):
         V += np.array([[bf1.get_potential_with(bf2, position, charge)
                         for bf1 in electronic_structure] for bf2 in electronic_structure])
-    return np.array(V)
+    return V
 
 
 def electron_electron(electronic_structure):
@@ -50,15 +51,15 @@ def electron_electron(electronic_structure):
                         g_ij = gaussian_product(i_primitive, j_primitive)
                         g_kl = gaussian_product(k_primitive, l_primitive)
 
-                        pref_ijkl = g_ij.prefactor * g_kl.prefactor
+                        g_ijkl = gaussian_product(g_ij, g_kl)
 
-                        term_1 = 2 * np.pi**2 / (g_ij.alpha * g_kl.alpha)
-                        term_2 = np.sqrt(np.pi / (g_ij.alpha + g_kl.alpha))
-
-                        alpha_ijkl = (g_ij.alpha * g_kl.alpha)/(g_ij.alpha + g_kl.alpha)
                         PG = g_ij.coordinates - g_kl.coordinates
+                        p = g_ij.alpha * g_kl.alpha
+                        exponent = p/g_ijkl.alpha * np.dot(PG, PG)
 
-                        V_ee_element += coeff_ijkl * pref_ijkl * term_1 * term_2 * boys(alpha_ijkl * np.dot(PG, PG), 0)
+                        factor = 2 * np.pi**2/p * g_ijkl.integrate**(1/3) * g_ijkl.prefactor**(2/3)
+
+                        V_ee_element += coeff_ijkl * factor * np.exp(exponent) * boys(exponent, 0)
 
         return V_ee_element
 
