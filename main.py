@@ -1,5 +1,5 @@
-from integrals import PrimitiveGaussian, BasisFunction
-from integrals import overlap, kinetic, electron_nuclear, electron_electron, nuclear_nuclear
+from basis import PrimitiveGaussian, BasisFunction
+from operators import overlap, kinetic, electron_nuclear, electron_electron, nuclear_nuclear
 from scf import scf_cycle
 import numpy as np
 import matplotlib.pyplot as plt
