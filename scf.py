@@ -3,6 +3,7 @@ import scipy
 
 
 def compute_density_matrix(molecular_orbitals, n_occup_orbitals):
+
     n_basis_functions = len(molecular_orbitals)
     density_matrix = np.zeros((n_basis_functions, n_basis_functions))
 
@@ -60,6 +61,17 @@ def generalized_eig(matrix, overlap):
 
 
 def scf_cycle(electronic_structure, S, T, Vne, Vee, tolerance=1e-5, max_scf_steps=20):
+    """
+    Solve the SCF cycle
+
+    :param electronic_structure: initial electronic structure
+    :param S: overlap matrix
+    :param T: kinetic energy matrix
+    :param Vne: electron-nuclear interaction matrix
+    :param Vee: electron-electron interaction matrix
+    :param tolerance: convergence criteria
+    :param max_scf_steps: maximum number of SCF steps
+    """
 
     # 1. Initialize density matrix
     n_basis_functions = len(electronic_structure)
