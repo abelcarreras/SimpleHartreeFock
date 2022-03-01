@@ -60,11 +60,11 @@ def generalized_eig(matrix, overlap):
     return eigenvalues, eigenvectors
 
 
-def scf_cycle(electronic_structure, S, T, Vne, Vee, tolerance=1e-5, max_scf_steps=20, extra_output=False):
+def scf_cycle(basis_set, S, T, Vne, Vee, tolerance=1e-5, max_scf_steps=20, extra_output=False):
     """
     Solve the SCF cycle
 
-    :param electronic_structure: initial electronic structure
+    :param basis_set: basis set used to represent electronic structure
     :param S: overlap matrix
     :param T: kinetic energy matrix
     :param Vne: electron-nuclear interaction matrix
@@ -74,7 +74,7 @@ def scf_cycle(electronic_structure, S, T, Vne, Vee, tolerance=1e-5, max_scf_step
     """
 
     # 1. Initialize density matrix
-    n_basis_functions = len(electronic_structure)
+    n_basis_functions = len(basis_set)
     density_matrix = np.zeros((n_basis_functions, n_basis_functions))
 
     electronic_energy_ref = 0.0

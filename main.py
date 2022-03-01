@@ -17,25 +17,25 @@ e_list = []
 for r_angs in np.arange(0.2, 3.2, 0.1):
     r = r_angs / 0.529  # convert angstrom to bohr
 
-    # H2 molecule electronic structure
+    # H2 molecule define coordinates in basis set
     H1_1s.set_coordinates([0, 0, 0])
     H2_1s.set_coordinates([r, 0, 0])
-    electronic_structure = [H1_1s, H2_1s]
+    basis_set = [H1_1s, H2_1s]
 
     # Compute components
-    S = overlap(electronic_structure)
-    T = kinetic(electronic_structure)
-    Vne = electron_nuclear(electronic_structure,
+    S = overlap(basis_set)
+    T = kinetic(basis_set)
+    Vne = electron_nuclear(basis_set,
                            nuclear_coordinates=[[0, 0, 0],
                                                 [r, 0, 0]],
                            nuclear_charges=[1, 1])
 
-    Vee = electron_electron(electronic_structure)
+    Vee = electron_electron(basis_set)
     nuclear_energy = nuclear_nuclear(nuclear_coordinates=[[0, 0, 0],
                                                           [r, 0, 0]],
                                      nuclear_charges=[1, 1])
 
-    electronic_energy = scf_cycle(electronic_structure, S, T, Vne, Vee)
+    electronic_energy = scf_cycle(basis_set, S, T, Vne, Vee)
     total_energy = electronic_energy + nuclear_energy
 
     e_list.append(total_energy)

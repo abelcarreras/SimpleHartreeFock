@@ -15,40 +15,40 @@ H2_1s = BasisFunction([H_pg1a, H_pg1b, H_pg1c], coefficients=[0.1543289673, 0.53
 
 r = 0.7 / 0.529  # convert angstrom to bohr
 
-# H2 molecule electronic structure
+# H2 molecule electronic basis set
 H1_1s.set_coordinates([0, 0, 0])
 H2_1s.set_coordinates([r, 0, 0])
-electronic_structure = [H1_1s, H2_1s]
+basis_set = [H1_1s, H2_1s]
 
 # Compute components
-S = overlap(electronic_structure)
-T = kinetic(electronic_structure)
-Vne = electron_nuclear(electronic_structure,
+S = overlap(basis_set)
+T = kinetic(basis_set)
+Vne = electron_nuclear(basis_set,
                        nuclear_coordinates=[[0, 0, 0],
                                             [r, 0, 0]],
                        nuclear_charges=[1, 1])
 
-Vee = electron_electron(electronic_structure)
+Vee = electron_electron(basis_set)
 nuclear_energy = nuclear_nuclear(nuclear_coordinates=[[0, 0, 0],
                                                       [r, 0, 0]],
                                  nuclear_charges=[1, 1])
 
-electronic_energy, density_matrix, mo_orbitals = scf_cycle(electronic_structure, S, T, Vne, Vee, extra_output=True)
+electronic_energy, density_matrix, mo_orbitals = scf_cycle(basis_set, S, T, Vne, Vee, extra_output=True)
 
 
-def get_overlap_matrix(electronic_structure):
+def get_overlap_matrix(basis_set):
     return np.array([[(basis1*basis2).integrate
-                      for basis1 in electronic_structure]
-                     for basis2 in electronic_structure])
+                      for basis1 in basis_set]
+                     for basis2 in basis_set])
 
-def get_overlap_matrix_super(electronic_structure_1, electronic_structure_2, density_matrix):
-    n = len(electronic_structure)
+def get_overlap_matrix_super(basis_set_1, basis_set_2, density_matrix):
+    n = len(basis_set)
     s = np.zeros((n, n, n, n))
 
-    for i, basis1 in enumerate(electronic_structure_1):
-        for j, basis2 in enumerate(electronic_structure_1):
-            for k, basis3 in enumerate(electronic_structure_2):
-                for l, basis4 in enumerate(electronic_structure_2):
+    for i, basis1 in enumerate(basis_set_1):
+        for j, basis2 in enumerate(basis_set_1):
+            for k, basis3 in enumerate(basis_set_2):
+                for l, basis4 in enumerate(basis_set_2):
                     dens_prod = density_matrix[i, j] * density_matrix[k ,l]
                     basis_prod = basis1 * basis2 * basis3 * basis4
                     s[i, j, k, l] = basis_prod.integrate * dens_prod
@@ -78,19 +78,19 @@ def rotate_coordinates(coordinates, angle, axis, center):
     return np.dot(coordinates, rot_matrix) + np.array(center).tolist()
 
 
-def rotate_electronic_structure(axis, angle, electronic_structure, center=(0, 0, 0)):
-    rotated_electronic_structure = []
-    for basis in electronic_structure:
+def rotate_basis_set(axis, angle, basis_set, center=(0, 0, 0)):
+    rotated_basis_set = []
+    for basis in basis_set:
         rotated_basis = []
         for prim in basis.primitive_gaussians:
             coordinates = rotate_coordinates(prim.coordinates, angle, axis, center)
             rotated_basis.append(PrimitiveGaussian(alpha=prim.alpha, coordinates=coordinates))
-        rotated_electronic_structure.append(BasisFunction(rotated_basis, coefficients=basis.coefficients))
+        rotated_basis_set.append(BasisFunction(rotated_basis, coefficients=basis.coefficients))
 
-    return rotated_electronic_structure
+    return rotated_basis_set
 
 
-self_similarity = get_overlap_matrix_super(electronic_structure, electronic_structure, density_matrix)
+self_similarity = get_overlap_matrix_super(basis_set, basis_set, density_matrix)
 print('self_similarity', self_similarity)
 
 orbital_1 = H1_1s * mo_orbitals[0][0] + H2_1s * mo_orbitals[0][1]
@@ -103,8 +103,8 @@ print('integrate o1*o2', (orbital_2*orbital_1).integrate)
 
 measure_list = []
 for angle in np.linspace(0, 2*np.pi, 100):
-    electronic_structure_r = rotate_electronic_structure([0, 1, 1], angle, electronic_structure, center=[r / 2, 0, 0])
-    measure_list.append(get_overlap_matrix_super(electronic_structure, electronic_structure_r, density_matrix)/self_similarity)
+    basis_set_r = rotate_basis_set([0, 1, 1], angle, basis_set, center=[r / 2, 0, 0])
+    measure_list.append(get_overlap_matrix_super(basis_set, basis_set_r, density_matrix) / self_similarity)
 
 plt.plot(np.linspace(0, 2*np.pi, 100), measure_list)
 plt.show()

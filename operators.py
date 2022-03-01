@@ -9,15 +9,15 @@ def boys(x, n):
         return special.gammainc(n+0.5, x) * special.gamma(n+0.5) * (1/(2*x**(n+0.5)))
 
 
-def overlap(electronic_structure):
+def overlap(basis_set):
     """
     Calculate the overlap matrix
     """
-    S = [[(bf1*bf2).integrate for bf1 in electronic_structure] for bf2 in electronic_structure]
+    S = [[(bf1*bf2).integrate for bf1 in basis_set] for bf2 in basis_set]
     return np.array(S)
 
 
-def kinetic(electronic_structure):
+def kinetic(basis_set):
     """
     Calculate the kinetic energy matrix
     """
@@ -35,16 +35,16 @@ def kinetic(electronic_structure):
 
         return T_element
 
-    T = [[matrix_element(bf1, bf2) for bf1 in electronic_structure] for bf2 in electronic_structure]
+    T = [[matrix_element(bf1, bf2) for bf1 in basis_set] for bf2 in basis_set]
 
     return np.array(T)
 
 
-def electron_nuclear(electronic_structure, nuclear_coordinates, nuclear_charges):
+def electron_nuclear(basis_set, nuclear_coordinates, nuclear_charges):
     """
     Calculate the kinetic energy matrix
     """
-    nbasis = len(electronic_structure)
+    nbasis = len(basis_set)
 
     def matrix_element(i_basisfunc, j_basisfunc, position, charge):
         V_element = 0
@@ -63,16 +63,16 @@ def electron_nuclear(electronic_structure, nuclear_coordinates, nuclear_charges)
     V = np.zeros([nbasis, nbasis])
     for position, charge in zip(nuclear_coordinates, nuclear_charges):
         V += np.array([[matrix_element(bf1, bf2, position, charge)
-                        for bf1 in electronic_structure] for bf2 in electronic_structure])
+                        for bf1 in basis_set] for bf2 in basis_set])
 
     return np.array(V)
 
 
-def electron_electron(electronic_structure):
+def electron_electron(basis_set):
     """
     Calculate the electron-electron interaction matrix (3D)
     """
-    nbasis = len(electronic_structure)
+    nbasis = len(basis_set)
 
     def matrix_element(i_basisfunc, j_basisfunc, k_basisfunc, l_basisfunc):
         V_ee_element = 0
@@ -99,10 +99,10 @@ def electron_electron(electronic_structure):
         return V_ee_element
 
     V_ee = np.zeros([nbasis, nbasis, nbasis, nbasis])
-    for i, i_basisfunc in enumerate(electronic_structure):
-        for j, j_basisfunc in enumerate(electronic_structure):
-            for k, k_basisfunc in enumerate(electronic_structure):
-                for l, l_basisfunc in enumerate(electronic_structure):
+    for i, i_basisfunc in enumerate(basis_set):
+        for j, j_basisfunc in enumerate(basis_set):
+            for k, k_basisfunc in enumerate(basis_set):
+                for l, l_basisfunc in enumerate(basis_set):
                     V_ee[i, j, k, l] = matrix_element(i_basisfunc, j_basisfunc, k_basisfunc, l_basisfunc)
 
     return V_ee
