@@ -6,7 +6,7 @@ def overlap(electronic_structure):
     """
     Calculate the overlap matrix
     """
-    S = [[bf1.get_overlap_with(bf2) for bf1 in electronic_structure] for bf2 in electronic_structure]
+    S = [[(bf1*bf2).integrate for bf1 in electronic_structure] for bf2 in electronic_structure]
     return np.array(S)
 
 

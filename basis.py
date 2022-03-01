@@ -14,7 +14,6 @@ def gaussian_product(g_1, g_2):
     """
     Calculate the product of two Gaussian primitives. (s functions only)
     """
-
     alpha = g_1.alpha + g_2.alpha
     prefactor = g_1.prefactor * g_2.prefactor
     p = g_1.alpha * g_2.alpha
@@ -48,14 +47,12 @@ class PrimitiveGaussian:
         """
         multi dimensional
         """
-
         return gaussian_product(self, other).integrate
 
     def get_kinetic_with(self, other):
         """
         3D
         """
-
         g_s = gaussian_product(self, other)
         PG = g_s.coordinates - other.coordinates
 
@@ -65,18 +62,21 @@ class PrimitiveGaussian:
         """
         3D
         """
-
         g_s = gaussian_product(self, other)
         PG = g_s.coordinates - position
 
         return -charge * g_s.integrate * 2 * (np.pi / g_s.alpha) ** (-1/2) * boys(g_s.alpha * np.dot(PG, PG), 0)
 
+    def __mul__(self, other):
+        return gaussian_product(self, other)
+
 
 class BasisFunction:
-    def __init__(self, primitive_gaussians, coefficients, coordinates=(0, 0, 0)):
+    def __init__(self, primitive_gaussians, coefficients, coordinates=None):
         primitive_gaussians = deepcopy(primitive_gaussians)
-        for primitive in primitive_gaussians:
-            primitive.coordinates = np.array(coordinates)
+        if coordinates is not None:
+            for primitive in primitive_gaussians:
+                primitive.coordinates = np.array(coordinates)
 
         self.primitive_gaussians = primitive_gaussians
         self.coefficients = coefficients
@@ -113,3 +113,30 @@ class BasisFunction:
             for primitive_2, coeff_2 in zip(other.primitive_gaussians, self.coefficients):
                 v += coeff_1 * coeff_2 * primitive_1.get_potential_with(primitive_2, position, charge)
         return v
+
+    @property
+    def integrate(self):
+        return sum([coef * prim.integrate for coef, prim in zip(self.coefficients, self.primitive_gaussians)])
+
+    def __mul__(self, other):
+        if isinstance(other, float):
+            return BasisFunction(self.primitive_gaussians, [coef * other for coef in self.coefficients])
+
+        elif isinstance(other, BasisFunction):
+
+            primitive_gaussians = []
+            coefficients = []
+
+            for primitive_1, coeff_1 in zip(self.primitive_gaussians, self.coefficients):
+                for primitive_2, coeff_2 in zip(other.primitive_gaussians, other.coefficients):
+                    primitive_gaussians.append(primitive_1 * primitive_2)
+                    coefficients.append(coeff_1 * coeff_2)
+
+            return BasisFunction(primitive_gaussians, coefficients)
+
+    def __rmul__(self, other):
+        return self * other
+
+    def __add__(self, other):
+        return BasisFunction(self.primitive_gaussians + other.primitive_gaussians,
+                             self.coefficients + other.coefficients)

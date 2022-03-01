@@ -60,7 +60,7 @@ def generalized_eig(matrix, overlap):
     return eigenvalues, eigenvectors
 
 
-def scf_cycle(electronic_structure, S, T, Vne, Vee, tolerance=1e-5, max_scf_steps=20):
+def scf_cycle(electronic_structure, S, T, Vne, Vee, tolerance=1e-5, max_scf_steps=20, extra_output=False):
     """
     Solve the SCF cycle
 
@@ -101,6 +101,8 @@ def scf_cycle(electronic_structure, S, T, Vne, Vee, tolerance=1e-5, max_scf_step
         # 7. Check convergence
         if abs(electronic_energy - electronic_energy_ref) < tolerance:
             print('SCF cycle converged after {} steps'.format(scf_steps+1))
+            if extra_output:
+                return electronic_energy, density_matrix, molecular_orbitals
             return electronic_energy
 
         electronic_energy_ref = electronic_energy
