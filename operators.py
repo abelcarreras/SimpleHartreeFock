@@ -115,11 +115,11 @@ def nuclear_nuclear(nuclear_coordinates, nuclear_charges):
     """
     nuclear_coordinates = np.array(nuclear_coordinates)
     V_nn = 0
-    for i, position in enumerate(nuclear_coordinates):
-        for j, position2 in enumerate(nuclear_coordinates):
+    for i, i_position in enumerate(nuclear_coordinates):
+        for j, j_position in enumerate(nuclear_coordinates):
             if i > j:
-                r = np.linalg.norm(position - position2)
-                V_nn += nuclear_charges[i] * nuclear_charges[j] / r
+                distance = np.linalg.norm(i_position - j_position)
+                V_nn += nuclear_charges[i] * nuclear_charges[j] / distance
 
     return V_nn
 
