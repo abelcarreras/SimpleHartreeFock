@@ -38,7 +38,7 @@ class PrimitiveGaussian:
             norm = prefactor * np.sqrt(np.pi/(2*self.alpha))**(len(coordinates))
             self.prefactor = prefactor / np.sqrt(norm)
 
-        self.integrate = self.prefactor * np.sqrt(np.pi / self.alpha) ** n_dim
+        self.integrate = self.prefactor * (np.pi / self.alpha)**(n_dim/2)
 
     def __call__(self, value):
         value = np.array(value)
