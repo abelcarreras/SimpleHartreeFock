@@ -1,13 +1,5 @@
 import numpy as np
 from copy import deepcopy
-from scipy import special
-
-
-def boys(x, n):
-    if x == 0:
-        return 1/(2*n+1)
-    else:
-        return special.gammainc(n+0.5, x) * special.gamma(n+0.5) * (1/(2*x**(n+0.5)))
 
 
 def gaussian_product(g_1, g_2):
@@ -43,30 +35,6 @@ class PrimitiveGaussian:
         value = np.array(value)
         return self.prefactor * np.exp(-self.alpha * np.sum((value - self.coordinates)**2))
 
-    def get_overlap_with(self, other):
-        """
-        multi dimensional
-        """
-        return gaussian_product(self, other).integrate
-
-    def get_kinetic_with(self, other):
-        """
-        3D
-        """
-        g_s = gaussian_product(self, other)
-        PG = g_s.coordinates - other.coordinates
-
-        return g_s.integrate * (3 * other.alpha - 2 * other.alpha ** 2 * (3/(2*g_s.alpha) + np.dot(PG, PG)))
-
-    def get_potential_with(self, other, position, charge):
-        """
-        3D
-        """
-        g_s = gaussian_product(self, other)
-        PG = g_s.coordinates - position
-
-        return -charge * g_s.integrate * 2 * (np.pi / g_s.alpha) ** (-1/2) * boys(g_s.alpha * np.dot(PG, PG), 0)
-
     def __mul__(self, other):
         return gaussian_product(self, other)
 
@@ -87,32 +55,6 @@ class BasisFunction:
     def set_coordinates(self, coordinates):
         for primitive in self.primitive_gaussians:
             primitive.coordinates = np.array(coordinates)
-
-    def get_overlap_with(self, other):
-
-        s = 0
-        for primitive_1, coeff_1 in zip(self.primitive_gaussians, self.coefficients):
-            for primitive_2, coeff_2 in zip(other.primitive_gaussians, self.coefficients):
-                s += coeff_1 * coeff_2 * primitive_1.get_overlap_with(primitive_2)
-
-        return s
-
-    def get_kinetic_with(self, other):
-
-        t = 0
-        for primitive_1, coeff_1 in zip(self.primitive_gaussians, self.coefficients):
-            for primitive_2, coeff_2 in zip(other.primitive_gaussians, self.coefficients):
-                t += coeff_1 * coeff_2 * primitive_1.get_kinetic_with(primitive_2)
-
-        return t
-
-    def get_potential_with(self, other, position, charge):
-
-        v = 0
-        for primitive_1, coeff_1 in zip(self.primitive_gaussians, self.coefficients):
-            for primitive_2, coeff_2 in zip(other.primitive_gaussians, self.coefficients):
-                v += coeff_1 * coeff_2 * primitive_1.get_potential_with(primitive_2, position, charge)
-        return v
 
     @property
     def integrate(self):

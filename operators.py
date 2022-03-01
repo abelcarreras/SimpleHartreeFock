@@ -1,5 +1,12 @@
 import numpy as np
-from basis import gaussian_product, boys
+from scipy import special
+
+
+def boys(x, n):
+    if x == 0:
+        return 1/(2*n+1)
+    else:
+        return special.gammainc(n+0.5, x) * special.gamma(n+0.5) * (1/(2*x**(n+0.5)))
 
 
 def overlap(electronic_structure):
@@ -10,25 +17,56 @@ def overlap(electronic_structure):
     return np.array(S)
 
 
-def kinetic(molecule):
+def kinetic(electronic_structure):
     """
     Calculate the kinetic energy matrix
     """
-    T = [[bf1.get_kinetic_with(bf2) for bf1 in molecule] for bf2 in molecule]
+
+    def matrix_element(i_basisfunc, j_basisfunc):
+        T_element = 0
+        for i_primitive, coeff_i in zip(i_basisfunc.primitive_gaussians, i_basisfunc.coefficients):
+            for j_primitive, coeff_j in zip(j_basisfunc.primitive_gaussians, j_basisfunc.coefficients):
+                coeff = coeff_i * coeff_j
+                g_s = i_primitive * j_primitive
+
+                PG = g_s.coordinates - j_primitive.coordinates
+                factor = 3 * j_primitive.alpha - 2 * j_primitive.alpha ** 2 * (3 / (2 * g_s.alpha) + np.dot(PG, PG))
+
+                T_element += coeff * g_s.integrate * factor
+
+        return T_element
+
+    T = [[matrix_element(bf1, bf2) for bf1 in electronic_structure] for bf2 in electronic_structure]
+
     return np.array(T)
 
 
 def electron_nuclear(electronic_structure, nuclear_coordinates, nuclear_charges):
     """
-    Calculate the electron-nuclear interaction matrix
+    Calculate the kinetic energy matrix
     """
     nbasis = len(electronic_structure)
-    V = np.zeros([nbasis, nbasis])
 
+    def matrix_element(i_basisfunc, j_basisfunc, position, charge):
+        V_element = 0
+        for i_primitive, coeff_i in zip(i_basisfunc.primitive_gaussians, i_basisfunc.coefficients):
+            for j_primitive, coeff_j in zip(j_basisfunc.primitive_gaussians, j_basisfunc.coefficients):
+                coeff = coeff_i * coeff_j
+                g_s = i_primitive * j_primitive
+
+                PG = g_s.coordinates - position
+                factor = -charge * 2 * (np.pi / g_s.alpha) ** (-1 / 2) * boys(g_s.alpha * np.dot(PG, PG), 0)
+
+                V_element += coeff * g_s.integrate * factor
+
+        return V_element
+
+    V = np.zeros([nbasis, nbasis])
     for position, charge in zip(nuclear_coordinates, nuclear_charges):
-        V += np.array([[bf1.get_potential_with(bf2, position, charge)
+        V += np.array([[matrix_element(bf1, bf2, position, charge)
                         for bf1 in electronic_structure] for bf2 in electronic_structure])
-    return V
+
+    return np.array(V)
 
 
 def electron_electron(electronic_structure):
@@ -36,8 +74,6 @@ def electron_electron(electronic_structure):
     Calculate the electron-electron interaction matrix (3D)
     """
     nbasis = len(electronic_structure)
-
-    V_ee = np.zeros([nbasis, nbasis, nbasis, nbasis])
 
     def matrix_element(i_basisfunc, j_basisfunc, k_basisfunc, l_basisfunc):
         V_ee_element = 0
@@ -48,10 +84,10 @@ def electron_electron(electronic_structure):
 
                         coeff_ijkl = coeff_i * coeff_j * coeff_k * coeff_l
 
-                        g_ij = gaussian_product(i_primitive, j_primitive)
-                        g_kl = gaussian_product(k_primitive, l_primitive)
+                        g_ij = i_primitive * j_primitive
+                        g_kl = k_primitive * l_primitive
 
-                        g_ijkl = gaussian_product(g_ij, g_kl)
+                        g_ijkl = g_ij * g_kl
 
                         PG = g_ij.coordinates - g_kl.coordinates
                         p = g_ij.alpha * g_kl.alpha
@@ -63,6 +99,7 @@ def electron_electron(electronic_structure):
 
         return V_ee_element
 
+    V_ee = np.zeros([nbasis, nbasis, nbasis, nbasis])
     for i, i_basisfunc in enumerate(electronic_structure):
         for j, j_basisfunc in enumerate(electronic_structure):
             for k, k_basisfunc in enumerate(electronic_structure):
