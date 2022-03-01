@@ -41,7 +41,7 @@ def get_overlap_matrix(basis_set):
                       for basis1 in basis_set]
                      for basis2 in basis_set])
 
-def get_overlap_matrix_super(basis_set_1, basis_set_2, density_matrix):
+def get_overlap_matrix_density(basis_set_1, basis_set_2, density_matrix):
     n = len(basis_set)
     s = np.zeros((n, n, n, n))
 
@@ -90,7 +90,7 @@ def rotate_basis_set(axis, angle, basis_set, center=(0, 0, 0)):
     return rotated_basis_set
 
 
-self_similarity = get_overlap_matrix_super(basis_set, basis_set, density_matrix)
+self_similarity = get_overlap_matrix_density(basis_set, basis_set, density_matrix)
 print('self_similarity', self_similarity)
 
 orbital_1 = H1_1s * mo_orbitals[0][0] + H2_1s * mo_orbitals[0][1]
@@ -104,7 +104,7 @@ print('integrate o1*o2', (orbital_2*orbital_1).integrate)
 measure_list = []
 for angle in np.linspace(0, 2*np.pi, 100):
     basis_set_r = rotate_basis_set([0, 1, 1], angle, basis_set, center=[r / 2, 0, 0])
-    measure_list.append(get_overlap_matrix_super(basis_set, basis_set_r, density_matrix) / self_similarity)
+    measure_list.append(get_overlap_matrix_density(basis_set, basis_set_r, density_matrix) / self_similarity)
 
 plt.plot(np.linspace(0, 2*np.pi, 100), measure_list)
 plt.show()
