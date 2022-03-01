@@ -21,18 +21,17 @@ def kinetic(electronic_structure):
     """
     Calculate the kinetic energy matrix
     """
-
     def matrix_element(i_basisfunc, j_basisfunc):
         T_element = 0
         for i_primitive, coeff_i in zip(i_basisfunc.primitive_gaussians, i_basisfunc.coefficients):
             for j_primitive, coeff_j in zip(j_basisfunc.primitive_gaussians, j_basisfunc.coefficients):
-                coeff = coeff_i * coeff_j
+                coeff_ij = coeff_i * coeff_j
                 g_s = i_primitive * j_primitive
 
                 PG = g_s.coordinates - j_primitive.coordinates
                 factor = 3 * j_primitive.alpha - 2 * j_primitive.alpha ** 2 * (3 / (2 * g_s.alpha) + np.dot(PG, PG))
 
-                T_element += coeff * g_s.integrate * factor
+                T_element += coeff_ij * g_s.integrate * factor
 
         return T_element
 
@@ -51,13 +50,13 @@ def electron_nuclear(electronic_structure, nuclear_coordinates, nuclear_charges)
         V_element = 0
         for i_primitive, coeff_i in zip(i_basisfunc.primitive_gaussians, i_basisfunc.coefficients):
             for j_primitive, coeff_j in zip(j_basisfunc.primitive_gaussians, j_basisfunc.coefficients):
-                coeff = coeff_i * coeff_j
+                coeff_ij = coeff_i * coeff_j
                 g_s = i_primitive * j_primitive
-
                 PG = g_s.coordinates - position
-                factor = -charge * 2 * (np.pi / g_s.alpha) ** (-1 / 2) * boys(g_s.alpha * np.dot(PG, PG), 0)
+                exponent = g_s.alpha * np.dot(PG, PG)
+                factor = -charge * 2 * (np.pi / g_s.alpha) ** (-1/2)
 
-                V_element += coeff * g_s.integrate * factor
+                V_element += coeff_ij * g_s.integrate * factor * boys(exponent, 0)
 
         return V_element
 
