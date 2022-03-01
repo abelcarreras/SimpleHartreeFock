@@ -55,6 +55,23 @@ def get_overlap_matrix_density(basis_set_1, basis_set_2, density_matrix):
 
     return np.sum(s)
 
+def get_overlap_matrix_density_fast(basis_set_1, basis_set_2, density_matrix):
+    n = len(basis_set)
+    s = np.zeros((n, n, n, n))
+
+    for i in range(n):
+        for k in range(n):
+            for j in range(i, n):
+                for l in range(k, n):
+                    dens_prod = density_matrix[i, j] * density_matrix[k ,l]
+                    basis_prod = basis_set_1[i] * basis_set_1[j] * basis_set_2[k] * basis_set_2[l]
+                    s[i, j, k, l] = basis_prod.integrate * dens_prod
+                    s[j, i, k, l] = basis_prod.integrate * dens_prod
+                    s[j, i, l, k] = basis_prod.integrate * dens_prod
+                    s[i, j, l, k] = basis_prod.integrate * dens_prod
+
+    return np.sum(s)
+
 
 print('-----------')
 print('mo_orbitals')
@@ -93,6 +110,9 @@ def rotate_basis_set(axis, angle, basis_set, center=(0, 0, 0)):
 self_similarity = get_overlap_matrix_density(basis_set, basis_set, density_matrix)
 print('self_similarity', self_similarity)
 
+self_similarity = get_overlap_matrix_density_fast(basis_set, basis_set, density_matrix)
+print('self_similarity', self_similarity)
+
 orbital_1 = H1_1s * mo_orbitals[0][0] + H2_1s * mo_orbitals[0][1]
 orbital_2 = H1_1s * mo_orbitals[1][0] + H2_1s * mo_orbitals[1][1]
 
@@ -102,10 +122,15 @@ print('integrate o1*o2', (orbital_2*orbital_1).integrate)
 
 
 measure_list = []
+measure_list2 = []
+
 for angle in np.linspace(0, 2*np.pi, 100):
     basis_set_r = rotate_basis_set([0, 1, 1], angle, basis_set, center=[r / 2, 0, 0])
     measure_list.append(get_overlap_matrix_density(basis_set, basis_set_r, density_matrix) / self_similarity)
+    measure_list2.append(get_overlap_matrix_density_fast(basis_set, basis_set_r, density_matrix) / self_similarity)
 
-plt.plot(np.linspace(0, 2*np.pi, 100), measure_list)
+plt.plot(np.linspace(0, 2*np.pi, 100), measure_list, label='original')
+plt.plot(np.linspace(0, 2*np.pi, 100), measure_list2, '--', label='fast')
+plt.legend()
 plt.show()
 
